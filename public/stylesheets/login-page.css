@@ -1,0 +1,33 @@
+.login_form {
+  background-color: #80bc5c;
+  width: 450px;
+  height: 300px;
+  padding: 20px;
+  text-align: center;
+  align-content: center;
+  margin: auto;
+}
+
+.login_form input {
+  width: 350px;
+  padding: 10px;
+  margin-bottom: 20px;
+  border: none;
+  background-color: #f2f2f2;
+  border-radius: 2px;
+}
+
+input[type = button] {
+  background-color: #4caf50;
+  color: #ffffff;
+  text-align: center;
+}
+
+.sign_up_link {
+  color: #51585e;
+}
+
+.sign_up_link a {
+  color: #000;
+  text-decoration: none;
+}
