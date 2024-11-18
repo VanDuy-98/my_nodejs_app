@@ -1,7 +1,39 @@
-const database = require('../database')
+const database = require('../database');
+const bcrypt = require('bcrypt');
 
-function getLoginPage(req, res) {
-  return res.render('../views/authentications/login', {session : req.session});
+async function getRegisterPage(req, res) {
+  try {
+    return await res.status(200).render('../views/authentications/register');
+  } catch (err) {
+    console.error('Error get register page: ', err.message);
+    res.status(500).send('An error occurred');
+  }
+}
+
+async function register(req, res) {
+  try {
+    if(req.body) {
+      const {firstName, lastName, address, email, password} = req.body;
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      query = `INSERT INTO users (firstName, lastName, address, email, password) VALUES (?, ?, ?, ?, ?)`;
+      await database.query(query, [firstName, lastName, address, email, hashedPassword]);
+      
+      return res.status(201).send('User registered successfully');
+    }
+  } catch (err) {
+    console.error('Error register: ', err.message);
+    res.status(500).send('An error occurred');
+  }
+}
+
+async function getLoginPage(req, res) {
+  try {
+    return await res.status(200).render('../views/authentications/login', {session : req.session});
+  } catch (err) {
+    console.error('Error get login page: ', err.message);
+    res.status(500).send('An error occurred');
+  }
 }
 
 async function login(req, res) {
@@ -46,5 +78,7 @@ function logout(req, res) {
 module.exports = {
   login,
   getLoginPage,
-  logout
+  logout,
+  getRegisterPage,
+  register
 }
