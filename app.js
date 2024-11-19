@@ -3,19 +3,22 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+const bodyParser = require('body-parser');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 const authRouter = require('./routes/authentication.router');
 
 var app = express();
-const session = require('express-session')
 
+const session = require('express-session')
 app.use(session({
-  secret : 'mypage',
+  secret : process.env.SESSION_SECRET,
   resave : true,
   saveUninitialized : true
 }));
+
+app.use(bodyParser.json());
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

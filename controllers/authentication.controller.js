@@ -1,7 +1,7 @@
 const authenticationService = require('../services/authentication.service');
 
 async function getRegisterPage(req, res, next) {
-  return await authenticationService.getRegisterPage(req, res);
+  return await authenticationService.getRegisterPage(res);
 }
 
 async function register(req, res, next) {
@@ -9,25 +9,15 @@ async function register(req, res, next) {
 }
 
 async function getLoginPage(req, res, next) {
-  return await authenticationService.getLoginPage(req, res)
+  return await authenticationService.getLoginPage(res)
 }
 
 async function login(req, res, next) {
-  try {
-    return await authenticationService.login(req, res);
-  } catch (err) {
-    console.error(`Error while logging: `, err.message);
-    next(err);
-  }
+  return await authenticationService.login(req, res);
 }
 
 async function logout(req, res, next) {
-  try {
-    return await authenticationService.logout(req, res)
-  } catch (err) {
-    console.error(`Error while logout: `, err.message);
-    next(err);
-  }
+  return await authenticationService.logout(req, res);
 }
 
 module.exports = {
