@@ -1,78 +1,102 @@
+const { query } = require('express');
 const database = require('../database');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const authEnum = require('../enums/authentication.enum');
 
-async function getRegisterPage(req, res) {
+const userRepository = require('../repositories/users/users.repository')
+
+async function getRegisterPage(res) {
   try {
     return await res.status(200).render('../views/authentications/register');
   } catch (err) {
     console.error('Error get register page: ', err.message);
-    res.status(500).send('An error occurred');
+    res.status(500).json({ data: 'An error occurred' }).end();
   }
 }
 
 async function register(req, res) {
   try {
     if(req.body) {
-      const {firstName, lastName, address, email, password} = req.body;
+      const {firstName, lastName, address, username, email, password} = req.body;
+
+      if (!email || !password) {
+        return res.status(400).json({ data: authEnum.fail.register.missing_email_and_pass_data });
+      }
+
+      const userData = await userRepository.getUserDataByEmail(email);
+
+      if(userData && userData.length) {
+        return res.status(400).json({ data: authEnum.fail.register.user_existed });
+      }
+
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      query = `INSERT INTO users (firstName, lastName, address, email, password) VALUES (?, ?, ?, ?, ?)`;
-      await database.query(query, [firstName, lastName, address, email, hashedPassword]);
+      await userRepository.store([firstName, lastName, address, username, email, hashedPassword])
+      const token = await createToken(res, email, hashedPassword);
       
-      return res.status(201).send('User registered successfully');
+      res.status(201).json({
+        data: authEnum.success.register,
+        token: token
+      });
     }
   } catch (err) {
-    console.error('Error register: ', err.message);
-    res.status(500).send('An error occurred');
+    console.error(`${authEnum.fail.register.when_execute}: `, err.message);
+    res.status(500).json({ data: 'An error occurred' }).end();
   }
 }
 
-async function getLoginPage(req, res) {
+async function getLoginPage(res) {
   try {
-    return await res.status(200).render('../views/authentications/login', {session : req.session});
+    return await res.status(200).render('../views/authentications/login');
   } catch (err) {
     console.error('Error get login page: ', err.message);
-    res.status(500).send('An error occurred');
+    res.status(500).json({ data: 'An error occurred' }).end();
   }
 }
 
 async function login(req, res) {
-  const user_email_address = req.body.user_email_address;
+  try {
+    const {email, password} = req.body;
+    
+    if (email || password) {
+      const userData = await userRepository.getUserDataByEmail(email);
 
-  const user_password = req.body.user_password;
-
-  if(user_email_address && user_password) {
-      query = `
-      SELECT * FROM user_login 
-      WHERE user_email = "${user_email_address}"
-      `;
-
-       await database.query(query, (error, data) => {
-          if(data && data.length > 0) {
-              for(let i = 0; i < data.length; i++) {
-                  if(data[i].user_password == user_password) {
-                      req.session.user_id = data[i].user_id;
-
-                      res.redirect("/");
-                  } else {
-                      res.send('Incorrect Password');
-                  }
-              }
-          } else {
-              res.send('Incorrect Email Address');
-          }
-          res.end();
-      });
-  } else {
-      res.send('Please Enter Email Address and Password Details');
-      res.end();
+      if(!userData || !userData.length) {
+        return res.status(404).json({ data: authEnum.fail.login.user_not_found });
+      } else {
+        const isCorrectPass = await bcrypt.compare(password, userData[0].password)
+        if(isCorrectPass) {
+          const token = await createToken(res, email, password)
+          res.status(200).json({
+            data: authEnum.success.login,
+            token: token
+          }).end();
+        } else {
+          return res.status(401).json({ data: authEnum.fail.login.password_incorrect });
+        }
+      }
+    } else {
+      return res.status(400).json({ data: authEnum.fail.login.missing_email_and_pass_data });
+    }
+  } catch (err) {
+    console.error(`${authEnum.fail.login.when_execute}: `, err.message);
+    res.status(500).json({ data: 'An error occurred' }).end();
   }
 }
 
-function logout(req, res) {
-  req.session.destroy();
+async function logout(req, res, next) {
+  try {
+    await req.session.destroy();
+    res.json({ data: authEnum.success.logout }).end();
+  } catch (err) {
+    console.error(`${authEnum.fail.logout.when_execute}: `, err.message);
+    res.status(500).json({ data: 'An error occurred' }).end();
+  }
+}
 
-  res.redirect("/")
+async function createToken(res, email, password) {
+  return await jwt.sign({ email, password }, process.env.SECRET_KEY, { expiresIn: '1h' })
 }
 
 module.exports = {

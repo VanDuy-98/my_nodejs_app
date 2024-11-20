@@ -1,3 +1,6 @@
-<%- include('../views/header.ejs') %>
-<h1>Hi Duy</h1>
-<%- include('../views/footer.ejs') %>
+<%- include('./header.ejs') %>
+<%- include('./navbar.ejs') %>
+<% if (session && session.user_data) { %>
+  <h1>Hi, <%= session.user_data.firstName + ' ' + session.user_data.lastName %></h1>
+<% } %>
+<%- include('./footer.ejs') %>
