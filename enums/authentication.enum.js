@@ -3,7 +3,8 @@ const { register } = require("../services/authentication.service")
 const success = {
   register: 'Register successfully',
   login: 'Login successfully',
-  logout: 'Logout successfully'
+  logout: 'Logout successfully',
+  user: ''
 }
 
 const fail = {
@@ -20,6 +21,11 @@ const fail = {
   },
   logout: {
     when_execute: 'Error logout'
+  },
+  user: {
+    missing_user_id_param: 'Missing user_id param',
+    user_not_found: 'User not found',
+    when_execute: 'Error user info'
   }
 }
 

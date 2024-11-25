@@ -8,6 +8,14 @@ function getUserDataByEmail(email) {
   })
 }
 
+function getUserDataById(id) {
+  return new Promise((resolve, reject) => {
+    db.query(`SELECT * FROM users WHERE id = "${id}"`, (err, data, fields) => {
+      err ? reject(err) : resolve(data)
+    })
+  })
+}
+
 /**
  * 
  * @param {Array} data 
@@ -18,5 +26,6 @@ async function store(data) {
 
 module.exports = {
   getUserDataByEmail,
-  store
+  store,
+  getUserDataById
 }
