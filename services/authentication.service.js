@@ -3,14 +3,47 @@ const database = require('../database');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const authEnum = require('../enums/authentication.enum');
+const helpers = require('../helpers/helper');
 
-const userRepository = require('../repositories/users/users.repository')
+const userRepository = require('../repositories/users/users.repository');
+const { use } = require('../routes/authentication.router');
 
 async function getRegisterPage(res) {
   try {
     return await res.status(200).render('../views/authentications/register');
   } catch (err) {
     console.error('Error get register page: ', err.message);
+    res.status(500).json({ data: 'An error occurred' }).end();
+  }
+}
+
+async function userInfo(req, res) {
+  try {
+    const userId = parseInt(req.params.userId, 10);
+
+    if (!userId) {
+      return res.status(400).json({ data: authEnum.fail.user.missing_user_id_param });
+    }
+
+    const user = await userRepository.getUserDataById(userId);
+
+    if (helpers.isEmpty(user)) {
+      return res.status(404).json({ data: authEnum.fail.user.user_not_found });
+    }
+
+    res.status(200).json({ 
+      data: {
+        id: user[0].id,
+        firstName: user[0].firstName,
+        lastName: user[0].lastName,
+        email: user[0].email,
+        address: user[0].address,
+        username: user[0].email
+      }
+     })
+    
+  } catch (err) {
+    console.error(`${authEnum.fail.user.when_execute}: `, err.message);
     res.status(500).json({ data: 'An error occurred' }).end();
   }
 }
@@ -104,5 +137,6 @@ module.exports = {
   getLoginPage,
   logout,
   getRegisterPage,
-  register
+  register,
+  userInfo
 }
