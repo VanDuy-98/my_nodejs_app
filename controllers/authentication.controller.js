@@ -20,10 +20,15 @@ async function logout(req, res, next) {
   return await authenticationService.logout(req, res);
 }
 
+async function userInfo(req, res, next) {
+  return await authenticationService.userInfo(req, res);
+}
+
 module.exports = {
   getLoginPage, 
   login,
   logout,
   getRegisterPage,
-  register
+  register,
+  userInfo
 }
