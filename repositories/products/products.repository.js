@@ -1,5 +1,5 @@
 const { name } = require('ejs');
-const db = require('../../database');
+const db = require('../../sequelize');
 
 function getProducts() {
   return new Promise((resolve, reject) => {
