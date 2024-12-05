@@ -1,5 +1,3 @@
-const { register } = require("../services/authentication.service")
-
 const success = {
   register: 'Register successfully',
   login: 'Login successfully',
