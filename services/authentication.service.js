@@ -1,5 +1,4 @@
 const { query } = require('express');
-const database = require('../database');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const authEnum = require('../enums/authentication.enum');

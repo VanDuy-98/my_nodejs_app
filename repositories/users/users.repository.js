@@ -1,4 +1,4 @@
-const db = require('../../database')
+const db = require('../../sequelize')
 
 function getUserDataByEmail(email) {
   return new Promise((resolve, reject) => {
