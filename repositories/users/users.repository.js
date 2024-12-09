@@ -1,31 +1,21 @@
-const db = require('../../sequelize')
+const db = require('../../sequelize');
+const User = require('../../models/user.model');
+const { where } = require('sequelize');
 
-function getUserDataByEmail(email) {
-  return new Promise((resolve, reject) => {
-    db.query(`SELECT * FROM users WHERE email = "${email}"`, (err, data, fields) => {
-      err ? reject(err) : resolve(data)
-    })
-  })
+async function getUserByEmail(emailParam) {
+  return await User.findOne({ where: { email: emailParam} });
 }
 
-function getUserDataById(id) {
-  return new Promise((resolve, reject) => {
-    db.query(`SELECT * FROM users WHERE id = "${id}"`, (err, data, fields) => {
-      err ? reject(err) : resolve(data)
-    })
-  })
+async function getUserById(idParam) {
+  return await User.findOne({ where: { id: idParam} });
 }
 
-/**
- * 
- * @param {Array} data 
- */
 async function store(data) {
-  await db.query('INSERT INTO users (firstName, lastName, address, username, email, password) VALUES (?, ?, ?, ?, ?, ?)', data);  
+  return await User.create(data) 
 }
 
 module.exports = {
-  getUserDataByEmail,
   store,
-  getUserDataById
+  getUserById,
+  getUserByEmail
 }

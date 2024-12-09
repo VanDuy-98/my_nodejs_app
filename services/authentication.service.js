@@ -23,20 +23,20 @@ async function userInfo(req, res) {
       return res.status(400).json({ data: authEnum.fail.user.missing_user_id_param });
     }
 
-    const user = await userRepository.getUserDataById(userId);
+    const user = await userRepository.getUserById(userId);
 
-    if (helpers.isEmpty(user)) {
+    if (!user) {
       return res.status(404).json({ data: authEnum.fail.user.user_not_found });
     }
 
     res.status(200).json({ 
       data: {
-        id: user[0].id,
-        firstName: user[0].firstName,
-        lastName: user[0].lastName,
-        email: user[0].email,
-        address: user[0].address,
-        username: user[0].email
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        address: user.address,
+        username: user.username
       }
      })
     
@@ -55,16 +55,25 @@ async function register(req, res) {
         return res.status(400).json({ data: authEnum.fail.register.missing_email_and_pass_data });
       }
 
-      const userData = await userRepository.getUserDataByEmail(email);
+      const userData = await userRepository.getUserByEmail(email);
 
-      if(userData && userData.length) {
+      if(userData) {
         return res.status(400).json({ data: authEnum.fail.register.user_existed });
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
+      
+      const dataStore = {
+        firstName,
+        lastName, 
+        username,
+        address,
+        email,
+        password: hashedPassword
+      }
 
-      await userRepository.store([firstName, lastName, address, username, email, hashedPassword])
-      const token = await createToken(res, email, hashedPassword);
+      await userRepository.store(dataStore)
+      const token = await createToken(email, hashedPassword);
       
       res.status(201).json({
         data: authEnum.success.register,
@@ -91,14 +100,14 @@ async function login(req, res) {
     const {email, password} = req.body;
     
     if (email || password) {
-      const userData = await userRepository.getUserDataByEmail(email);
+      const userData = await userRepository.getUserByEmail(email);
 
-      if(!userData || !userData.length) {
+      if(!userData) {
         return res.status(404).json({ data: authEnum.fail.login.user_not_found });
       } else {
-        const isCorrectPass = await bcrypt.compare(password, userData[0].password)
+        const isCorrectPass = await bcrypt.compare(password, userData.password)
         if(isCorrectPass) {
-          const token = await createToken(res, email, password)
+          const token = await createToken(email, password)
           res.status(200).json({
             data: authEnum.success.login,
             token: token
@@ -126,7 +135,7 @@ async function logout(req, res, next) {
   }
 }
 
-async function createToken(res, email, password) {
+async function createToken(email, password) {
   return await jwt.sign({ email, password }, process.env.SECRET_KEY, { expiresIn: '1h' })
 }
 
