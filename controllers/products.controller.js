@@ -16,9 +16,14 @@ async function update(req, res, next) {
   return await productService.update(req, res, next);
 }
 
+async function remove(req, res, next) {
+  return await productService.remove(req, res, next);
+}
+
 module.exports = {
   getProducts,
   getProductById,
   store,
-  update
+  update,
+  remove
 }

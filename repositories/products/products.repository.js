@@ -1,59 +1,37 @@
-const { name } = require('ejs');
-const db = require('../../sequelize');
+const Product = require('../../models/product.model')
 
-function getProducts() {
-  return new Promise((resolve, reject) => {
-    db.query('SELECT * FROM products', (err, data, fields) => {
-      err ? reject(err) : resolve(data);
-    })
-  })
+async function getAll() {
+  return await Product.findAll();
 }
-
-function getProductById(id) {
-  return new Promise((resolve, reject) => {
-    db.query(`SELECT * FROM products WHERE id = ${id}`, (err, data, fields) => {
-      err ? reject(err) : resolve(data);
-    })
-  })
+async function getProductById(id) {
+  return await Product.findByPk(id);
 }
 
 async function store(data) {
-  await db.query('INSERT INTO products (name, image, color, price, capacity) VALUES (?, ?, ?, ?, ?)', data);
+  return await Product.create(data);
 }
 
-async function update(id, data) {
-  let sql = 'UPDATE products SET ';
-  if (data.name) {
-    sql += `name = '${data.name}' `;
-  }
+async function update(idParam, data) {
+  return await Product.update(data, {
+      where: {
+        id: idParam,
+      },
+    },
+  );
+}
 
-  if (data.image) {
-    sql += `image = '${data.image}' `;
-  }
-
-  if (data.color) {
-    sql += `color = '${data.color}' `;
-  }
-
-  if (data.price) {
-    sql += `price = '${data.price}', `;
-  }
-
-  if (data.capacity) {
-    sql += `capacity = '${data.capacity}'`;
-  }
-
-  sql += ` WHERE id = ${id}`;
-
-  console.log(sql);
-  
-
-  // await db.query(sql);
+async function remove(idParam) {
+  return await Product.destroy({
+    where: {
+      id: idParam,
+    },
+  });
 }
 
 module.exports = {
-  getProducts,
   getProductById,
   store,
-  update
+  update,
+  getAll,
+  remove
 }

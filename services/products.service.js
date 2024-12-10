@@ -5,7 +5,7 @@ const { name } = require('ejs');
 
 async function getProducts(req, res, next) {
   try {
-    const products = await productRepo.getProducts();
+    const products = await productRepo.getAll();
     res.status(200).json({ products })
   } catch (err) {
     console.error(`${productEnum.fail.get_products}: `, err.message);
@@ -23,7 +23,7 @@ async function getProductById(req, res, next) {
 
     const product = await productRepo.getProductById(productId);
 
-    if (helpers.isEmpty(product)) {
+    if (!product) {
       return res.status(404).json({ data: productEnum.fail.not_found });
     }
 
@@ -43,7 +43,7 @@ async function store(req, res, next) {
       return res.status(400).json({ data: productEnum.fail.missing_body_data});
     }
 
-    await productRepo.store(Object.values(requestData));
+    await productRepo.store(requestData);
     
     res.status(200).json({ data: productEnum.success.store });
   } catch (err) {
@@ -60,36 +60,19 @@ async function update(req, res, next) {
       return res.status(400).json({ data: productEnum.fail.missing_id_param });
     }
 
-    const requestData = req.body;
+    const product = await productRepo.getProductById(productId);
 
+    if (!product) {
+      return res.status(404).json({ data: productEnum.fail.not_found });
+    }
+
+    const requestData = req.body;
 
     if (helpers.isEmpty(requestData)) {
       return res.status(400).json({ data: productEnum.fail.missing_body_data});
     }
 
-    let updateData = [];
-    const product = await productRepo.getProductById(productId);
-
-    if (helpers.isEmpty(product)) {
-      return res.status(404).json({ data: productEnum.fail.not_found });
-    }
-
-    console.log(product[0].image);
-    
-
-    for (const key in product[0]) {
-      if (Object.prototype.hasOwnProperty.call(requestData, key)) {
-        updateData[key] = requestData[key];
-      } else {
-        updateData[key] = product[0].key
-      }
-    }
-
-
-    console.log(updateData);
-    
-
-    // await productRepo.update(productId, requestData)
+    await productRepo.update(productId, requestData)
 
     res.status(200).json({ data: productEnum.success.update });
   } catch (err) {
@@ -98,9 +81,33 @@ async function update(req, res, next) {
   }
 }
 
+async function remove(req, res, next) {
+  try {
+    const productId = parseInt(req.params.id, 10);
+
+    if (!productId) {
+      return res.status(400).json({ data: productEnum.fail.missing_id_param });
+    }
+
+    const product = await productRepo.getProductById(productId);
+    
+    if (!product) {
+      return res.status(404).json({ data: productEnum.fail.not_found });
+    }
+
+    await productRepo.remove(productId);
+
+    res.status(200).json({ data: productEnum.success.delete })
+  } catch (err) {
+    console.error(`${productEnum.fail.delete_product}: `, err.message);
+    res.status(500).json({ data: 'An error occurred' }).end();
+  }
+}
+
 module.exports = {
   getProducts,
   getProductById,
   store,
-  update
+  update,
+  remove
 }
